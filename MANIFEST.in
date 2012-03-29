@@ -1,0 +1,6 @@
+include setup.py
+include phone
+global-exclude *~
+include README
+include COPYING
+include MANIFEST

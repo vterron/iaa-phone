@@ -52,8 +52,7 @@ class Scraper(HTMLParser.HTMLParser):
             self.in_link = False
 
 
-
-# http://stackoverflow.com/questions/930303/python-string-cleanup-manipulation-accented-characters
+# http://stackoverflow.com/q/930303/
 def remove_accents (unicrap):
     """This replaces UNICODE Latin-1 characters with
     something equivalent in 7-bit ASCII. All characters in the standard
@@ -125,30 +124,6 @@ class Person(object):
         return remove_accents(self.name)
 
 
-class Guest(Person):
-
-    def __init__(self, name, institution, dates, position, contact, email, encoding = 'iso-8859-1'):
-        super(Guest, self).__init__(name, '', position, '', email, encoding = encoding)
-        self.institution = unescape(institution.decode(encoding))
-        self.dates       = unescape(dates.decode(encoding))
-        self.contact     = unescape(contact.decode(encoding))
-
-def alphabetical_query():
-
-    alphabetical = urllib.urlopen('http://www.iaa.es/personal/general.html').read()
-    regexp = re.compile("<td nowrap>&nbsp;<b>([0-9]*)</b>&nbsp;</td><td nowrap>(<a .*?>)?(.*?)(</a>)?</td>"
-                        "<td nowrap>(.*?)</td><td nowrap>(.*?)</td><td nowrap>(.*?)&nbsp;</td></tr>", re.IGNORECASE)
-    found_persons = []
-    for matched_line in regexp.findall(alphabetical):
-        phone      = matched_line[0].strip()
-        name       = matched_line[2].strip()
-        department = matched_line[4].strip()
-        position   = matched_line[5].strip()
-        email      = matched_line[6].strip()
-        found_persons.append(Person(name, department, position, phone, email))
-    return found_persons
-
-
 def alphabetical_list():
     url = "http://www.iaa.es/content/general-alphabetical-list.php"
     html = urllib.urlopen(url).read()
@@ -172,111 +147,6 @@ def alphabetical_list():
         found_persons.append(Person(name, department, position, phone, email))
     return found_persons
 
-
-def directorio_telefonico():
-
-    directorio = urllib.urlopen('http://www.iaa.es/privado/directorio.html').read()
-    # A row in the table will look like this. There are no <a></a> tags right now,
-    # but who knows if they may be added in the future.
-    # <tr><td nowrap align="center"><b>&nbsp;639</b></td><td nowrap>&nbsp;
-    # Amado Gonzalez, Pedro Jose</td><td nowrap>&nbsp;pja@iaa.es</td></tr>
-
-    regexp = re.compile("<tr><td nowrap align=\"center\"><b>&nbsp;([0-9]*)</b></td>"
-                        "<td nowrap>&nbsp;(<a .*?>)?(.*?)(</a>)?</td><td nowrap>&nbsp;(.*?)</td></tr>",
-                        re.IGNORECASE)
-
-    found_persons = []
-    for matched_line in regexp.findall(directorio):
-        phone = matched_line[0].strip()
-        name  = matched_line[2].strip()
-        email = matched_line[4].strip()
-        found_persons.append(Person(name, '', '', phone, email))
-    return found_persons
-
-
-def personal_vinculado():
-
-    vinculado = urllib.urlopen('http://www.iaa.es/privado/personal/pv.html').read()
-    # A row in the table will look like this. Note that the <a></a> tags are optional
-    # <tr><td nowrap>&nbsp;<b></b>&nbsp;</td><td nowrap><a href="/~iagudo">Agudo
-    # Rodriguez, Juan Ivan</a></td><td nowrap>DREG</td><td nowrap>Colaborador
-    # Externo</td><td nowrap>iagudo&nbsp;</td></tr>
-
-    regexp = re.compile("<tr><td nowrap>&nbsp;<b>([0-9]*)</b>&nbsp;</td><td nowrap>(<a .*?>)?(.*?)(</a>)?</td>"
-                        "<td nowrap>(.*?)</td><td nowrap>(.*?)</td><td nowrap>(.*?)&nbsp;</td></tr>", re.IGNORECASE)
-
-    found_persons = []
-    for matched_line in regexp.findall(vinculado):
-        phone      = matched_line[0].strip()
-        name       = matched_line[2].strip()
-        department = matched_line[4].strip()
-        position   = matched_line[5].strip()
-        email      = matched_line[6].strip()
-        found_persons.append(Person(name, department, position, phone, email))
-    return found_persons
-
-
-def visitantes():
-
-    registro_visitas = urllib.urlopen('http://www.iaa.es/privado/visitas/').read()
-
-    # <table width="100%" border="0" cellspacing="0" cellpadding="0" class="nlabel">
-    # <tr><td width="12" nowrap background="/img/label/ncl.gif">&nbsp;</td>
-    # <td nowrap background="/img/label/ncc.gif">Josep Maria Masque</td>
-    # <td width="12" nowrap background="/img/label/ncr.gif">&nbsp;</td>
-    # <td width="600" background="/img/label/nbg.gif">&nbsp;</td></tr>
-    # </table>
-    #
-    # This is how an entry in the listing looks like
-    # <table width="600" border="0" cellspacing="0" cellpadding="0" class="head">
-    # <tr><td width="12" nowrap>&nbsp;</td><td class="gbold">Stockholm University</td></tr>
-    # <tr><td width="12" nowrap>&nbsp;</td><td class="bold">del 04 de Octubre de 2010, al 29 de Octubre de 2010</td></tr>
-    # <tr><td width="12" nowrap>&nbsp;</td><td><span class="gbold">Cat.Prof.</span> Predoc<p>&nbsp;</p></td></tr>
-    # <tr><td width="12" nowrap>&nbsp;</td><td><span class="bold">Persona contacto:</span> Romero Canizales, Cristina</td></tr>
-    # <tr><td width="12" nowrap>&nbsp;</td><td><span class="bold">e-mail:</span> cromero@iaa.es</td></tr>
-    # </table>
-
-
-    regexp = re.compile(
-        "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" class=\"nlabel\">.*?"
-        "<tr>.*?</td>.*?"
-        "<td .*?>(.*?)</td>.*?"
-        "<td .*?</td>.*?"
-        "<td .*?</tr>.*?"
-        "</table>.*?"
-        "<table .*?>[\s]*"
-        "<tr><td .*?</td><td .*?>(.*?)</td></tr>[\s]*"
-        "<tr><td .*?</td><td .*?>(.*?)</td></tr>[\s]*"
-        "<tr><td .*?</td><td><span .*?</span>(.*?)<p>.*?</p></td></tr>[\s]*"
-        "<tr><td .*?</td><td><span .*?</span>(.*?)</td></tr>[\s]*"
-        "<tr><td .*?</td><td><span .*?</span>(.*?)</td></tr>[\s]*"
-        "</table>"
-        , re.IGNORECASE | re.DOTALL)
-
-    found_visitors = []
-    for matched_line in regexp.findall(registro_visitas):
-        name        = matched_line[0].strip()
-        institution = matched_line[1].strip()
-        dates       = matched_line[2].strip()
-        position    = matched_line[3].strip()
-        contact     = matched_line[4].strip()
-        email       = matched_line[5].strip()
-        found_visitors.append(Guest(name, institution, dates, position, contact, email))
-    return found_visitors
-
-def remove_duplicate_names(list_of_persons):
-    unique_list = []
-    for person in list_of_persons:
-        if person.name not in [x.name for x in unique_list]:
-            unique_list.append(person)
-    return unique_list
-
-def name_search(target, encoding='utf-8'):
-    target = remove_accents(target.decode(encoding)).lower()
-    query = directorio_telefonico() + personal_vinculado() + visitantes()
-    name_matches = filter(lambda x: target in x.name_wo_accents.lower(), query)
-    return remove_duplicate_names(name_matches)
-
 def search(target, encoding='utf-8'):
     target = remove_accents(target.decode(encoding)).lower()
     query = alphabetical_list()
@@ -284,9 +154,7 @@ def search(target, encoding='utf-8'):
                                target in str(x.phone) or \
                                target in x.email, query)
 
-    matches.sort(key = lambda x: x.name)
-    return remove_duplicate_names(matches)
-
+    return sorted(matches, key = lambda x: x.name)
 
 if __name__ == "__main__":
 
@@ -316,13 +184,6 @@ if __name__ == "__main__":
     if not matches:
         sys.exit(0)
 
-    # If the email address is at the @iaa.es domain (and most of the addresses
-    # certainly will), only the username is shown
-    domain = '@iaa.es'
-    for match in matches:
-        if match.email.endswith(domain):
-            match.email = match.email[:-len(domain)]
-
     # Determine the max length of each column
     name_column_length       = max([len(x.name) for x in matches])
     department_column_length = max([len(x.department) for x in matches])
@@ -336,4 +197,3 @@ if __name__ == "__main__":
               person.email.ljust(email_column_length)
 
     sys.exit(0)
-

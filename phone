@@ -113,7 +113,7 @@ def unescape(s):
 
 
 class Person(object):
-    def __init__(self, name, department, position, phone, email, encoding = 'iso-8859-1'):
+    def __init__(self, name, department, position, phone, email, encoding = 'utf-8'):
         self.name = unescape(name.decode(encoding))
         self.department = unescape(department.decode(encoding))
         self.position = unescape(position.decode(encoding))
@@ -145,6 +145,30 @@ def alphabetical_query():
         department = matched_line[4].strip()
         position   = matched_line[5].strip()
         email      = matched_line[6].strip()
+        found_persons.append(Person(name, department, position, phone, email))
+    return found_persons
+
+
+def alphabetical_list():
+    url = "http://www.iaa.es/content/general-alphabetical-list.php"
+    html = urllib.urlopen(url).read()
+
+    # A row in the table will look something like this:
+    # <tr><td>605</td><td><a href='http://www.python.org/~guido/'>Guido van Rossum</a></td>
+    #<td>Python Department</td><td>Benevolent Dictator for Life</td>
+    #<td>guido@python.org</td></tr>
+
+    regexp = re.compile("<tr><td>([0-9]*)</td><td>(<a .*?>)?(.*?)(</a>)?</td>"
+                        "<td>(.*?)</td><td>(.*?)</td><td>(.*?)</td></tr>",
+                        re.IGNORECASE)
+
+    found_persons = []
+    for matched_line in regexp.findall(html):
+        phone = matched_line[0].strip()
+        name  = matched_line[2].strip()
+        department = matched_line[4].strip()
+        position = matched_line[5].strip()
+        email = matched_line[6].strip()
         found_persons.append(Person(name, department, position, phone, email))
     return found_persons
 
@@ -255,7 +279,7 @@ def name_search(target, encoding='utf-8'):
 
 def search(target, encoding='utf-8'):
     target = remove_accents(target.decode(encoding)).lower()
-    query = directorio_telefonico() + personal_vinculado() + visitantes()
+    query = alphabetical_list()
     matches = filter(lambda x: target in x.name_wo_accents.lower() or \
                                target in str(x.phone) or \
                                target in x.email, query)
@@ -300,12 +324,14 @@ if __name__ == "__main__":
             match.email = match.email[:-len(domain)]
 
     # Determine the max length of each column
-    name_column_length  = max([len(x.name) for x in matches])
-    phone_column_length = max([len(x.phone) for x in matches])
-    email_column_length = max([len(x.email) for x in matches])
+    name_column_length       = max([len(x.name) for x in matches])
+    department_column_length = max([len(x.department) for x in matches])
+    phone_column_length      = max([len(x.phone) for x in matches])
+    email_column_length      = max([len(x.email) for x in matches])
 
     for person in matches:
         print person.name.ljust(name_column_length), '|', \
+              person.department.ljust(department_column_length), '|', \
               person.phone.ljust(phone_column_length), '|', \
               person.email.ljust(email_column_length)
 

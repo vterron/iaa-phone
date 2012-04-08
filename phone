@@ -147,16 +147,16 @@ def alphabetical_query():
         email      = matched_line[6].strip()
         found_persons.append(Person(name, department, position, phone, email))
     return found_persons
-    
+
 
 def directorio_telefonico():
 
     directorio = urllib.urlopen('http://www.iaa.es/privado/directorio.html').read()
-    # A row in the table will look like this. There are no <a></a> tags right now, 
+    # A row in the table will look like this. There are no <a></a> tags right now,
     # but who knows if they may be added in the future.
     # <tr><td nowrap align="center"><b>&nbsp;639</b></td><td nowrap>&nbsp;
     # Amado Gonzalez, Pedro Jose</td><td nowrap>&nbsp;pja@iaa.es</td></tr>
-    
+
     regexp = re.compile("<tr><td nowrap align=\"center\"><b>&nbsp;([0-9]*)</b></td>"
                         "<td nowrap>&nbsp;(<a .*?>)?(.*?)(</a>)?</td><td nowrap>&nbsp;(.*?)</td></tr>",
                         re.IGNORECASE)
@@ -168,7 +168,7 @@ def directorio_telefonico():
         email = matched_line[4].strip()
         found_persons.append(Person(name, '', '', phone, email))
     return found_persons
-        
+
 
 def personal_vinculado():
 
@@ -177,7 +177,7 @@ def personal_vinculado():
     # <tr><td nowrap>&nbsp;<b></b>&nbsp;</td><td nowrap><a href="/~iagudo">Agudo
     # Rodriguez, Juan Ivan</a></td><td nowrap>DREG</td><td nowrap>Colaborador
     # Externo</td><td nowrap>iagudo&nbsp;</td></tr>
-    
+
     regexp = re.compile("<tr><td nowrap>&nbsp;<b>([0-9]*)</b>&nbsp;</td><td nowrap>(<a .*?>)?(.*?)(</a>)?</td>"
                         "<td nowrap>(.*?)</td><td nowrap>(.*?)</td><td nowrap>(.*?)&nbsp;</td></tr>", re.IGNORECASE)
 
@@ -195,7 +195,7 @@ def personal_vinculado():
 def visitantes():
 
     registro_visitas = urllib.urlopen('http://www.iaa.es/privado/visitas/').read()
-    
+
     # <table width="100%" border="0" cellspacing="0" cellpadding="0" class="nlabel">
     # <tr><td width="12" nowrap background="/img/label/ncl.gif">&nbsp;</td>
     # <td nowrap background="/img/label/ncc.gif">Josep Maria Masque</td>
@@ -243,14 +243,14 @@ def visitantes():
 def remove_duplicate_names(list_of_persons):
     unique_list = []
     for person in list_of_persons:
-        if person.name not in map(lambda x: x.name, unique_list):
+        if person.name not in [x.name for x in unique_list]:
             unique_list.append(person)
     return unique_list
 
 def name_search(target, encoding='utf-8'):
     target = remove_accents(target.decode(encoding)).lower()
     query = directorio_telefonico() + personal_vinculado() + visitantes()
-    name_matches = filter(lambda x: target in x.name_wo_accents.lower(), query) 
+    name_matches = filter(lambda x: target in x.name_wo_accents.lower(), query)
     return remove_duplicate_names(name_matches)
 
 def search(target, encoding='utf-8'):
@@ -288,7 +288,7 @@ if __name__ == "__main__":
 
     target = sys.argv[1]
     matches = search(target)
-    
+
     if not matches:
         sys.exit(0)
 
@@ -300,9 +300,9 @@ if __name__ == "__main__":
             match.email = match.email[:-len(domain)]
 
     # Determine the max length of each column
-    name_column_length  = max(map(lambda x: len(x.name), matches))
-    phone_column_length = max(map(lambda x: len(x.phone), matches))
-    email_column_length = max(map(lambda x: len(x.email), matches))
+    name_column_length  = max([len(x.name) for x in matches])
+    phone_column_length = max([len(x.phone) for x in matches])
+    email_column_length = max([len(x.email) for x in matches])
 
     for person in matches:
         print person.name.ljust(name_column_length), '|', \

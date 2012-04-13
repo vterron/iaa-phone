@@ -21,8 +21,12 @@
 import htmlentitydefs
 import HTMLParser
 import optparse
+import os.path
+import pickle
 import re
 import sys
+import tempfile
+import time
 import unicodedata
 import urllib
 
@@ -122,10 +126,12 @@ class Person(object):
     def name_wo_accents(self):
         return remove_accents(self.name)
 
-
-def alphabetical_list():
+def query_website():
     url = "http://www.iaa.es/content/general-alphabetical-list.php"
     html = urllib.urlopen(url).read()
+    return html
+
+def parse_alphabetical_list(html):
 
     # A row in the table will look something like this:
     # <tr><td>605</td><td><a href='http://www.python.org/~guido/'>Guido van Rossum</a></td>
@@ -146,12 +152,26 @@ def alphabetical_list():
         found_persons.append(Person(name, department, position, phone, email))
     return found_persons
 
-def search(target, encoding='utf-8'):
+def search(target, encoding ='utf-8', cache_path = None, cache_max = 7):
+
+    """ The IAA website is taking too long to load (~4.5 secs), so we can cache
+    the list of people so that a connection to the database is not needed every
+    time we run the script. If 'cache_path' exists and it is less than
+    'cache_max' days old, the cache will be unpickled and used instead. """
+
+    if not cache_path or not os.path.exists(cache_path) or \
+       (time.time() - os.path.getmtime(cache_path)) > (cache_max * 24 * 3600):
+          html = query_website()
+          people = parse_alphabetical_list(html)
+          if cache_path:  # cache (pickle) the list if a path was given
+              pickle.dump(people, open(cache_path, 'wb'))
+    else:
+        people = pickle.load(open(cache_path, 'rb'))
+
     target = remove_accents(target.decode(encoding)).lower()
-    query = alphabetical_list()
     matches = filter(lambda x: target in x.name_wo_accents.lower() or \
                                target in str(x.phone) or \
-                               target in x.email, query)
+                               target in x.email, people)
 
     return sorted(matches, key = lambda x: x.name)
 
@@ -173,12 +193,30 @@ if __name__ == "__main__":
     parser = optparse.OptionParser(description = description)
     parser.usage = "%prog NAME | PHONE | EMAIL"
 
-    if len(sys.argv) != 2:
+    parser.add_option('-c', action = 'store_true', dest = 'clear',
+                      help = "due to the slow speed of the IAA website; we "
+                         "use a local cache of the alphabetical list, so that "
+                         "that the website is only accessed *once a week*. "
+                         "This option clears the local cache, forcing the "
+                         "connection to the IAA website -- useful in you know "
+                         "the website was recently updated!")
+
+    (options, args) = parser.parse_args(args = sys.argv)
+    if len(args) != 2:
         parser.print_help()
         sys.exit(2)
 
-    target = sys.argv[1]
-    matches = search(target)
+    # If the user wants to clear the local cache, we use a maximum number of
+    # days equal to a negative value (although zero would also work); in this
+    # manner, the cache will always considered too old and discarded.
+    cache_path = os.path.join(tempfile.gettempdir(), 'iaa-phone-cache.pkl')
+    if options.clear:
+        cache_max = -1
+    else:
+        cache_max = 7 # days
+
+    target = args[1]
+    matches = search(target, cache_path = cache_path, cache_max = cache_max)
 
     if not matches:
         sys.exit(0)

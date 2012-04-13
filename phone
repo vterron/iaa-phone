@@ -18,14 +18,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import htmlentitydefs
+import HTMLParser
+import optparse
 import re
 import sys
-import urllib
-import optparse
-import HTMLParser
 import unicodedata
-import htmlentitydefs
-
+import urllib
 
 class Scraper(HTMLParser.HTMLParser):
     in_h4 = False

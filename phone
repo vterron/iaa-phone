@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# encoding:UTF-8
 
 # Copyright (c) 2011 Victor Terron. All rights reserved.
 # Institute of Astrophysics of Andalusia, IAA-CSIC
@@ -163,6 +164,14 @@ def search(target, encoding ='utf-8', cache_path = None, cache_max = 7):
        (time.time() - os.path.getmtime(cache_path)) > (cache_max * 24 * 3600):
           html = query_website()
           people = parse_alphabetical_list(html)
+
+          # Include in the search the restaurant at which, as part of a
+          # time-honored and almost sacred tradition, we have lunch every
+          # Friday: http://www.restauranteraices.es/
+          raices = Person("Restaurante Raíces", '', '', '958-120-103',
+                          'info@restauranteraices.es')
+          people.append(raices)
+
           if cache_path:  # cache (pickle) the list if a path was given
               pickle.dump(people, open(cache_path, 'wb'))
     else:

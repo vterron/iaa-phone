@@ -25,7 +25,15 @@ import optparse
 import os.path
 import pickle
 import re
+
+# Set the default encoding to UTF-8. This solution is undoubtedly unclean, and
+# would potentially break in larger scripts, but good enough to make our simple
+# script work when used with pipes (avoiding the UnicodeEncodeError exception).
+
 import sys
+reload(sys) # restore sys.setdefaultencoding()
+sys.setdefaultencoding('UTF-8')
+
 import tempfile
 import time
 import unicodedata

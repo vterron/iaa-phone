@@ -173,12 +173,55 @@ def search(target, encoding ='utf-8', cache_path = None, cache_max = 7):
           html = query_website()
           people = parse_alphabetical_list(html)
 
+          def add_place(name, phone):
+              """ Append a new Person object to 'people'. Except for the name
+              and telephone number, all the fields are set to empty strings"""
+              people.append(Person(name, '', '', phone, ''))
+
+          # The rooms and laboratories telephone numbers have to be hard-coded
+          # as they are only available to employees through the IAA intranet.
+
+          for name, phone in \
+              [('Almacén Material Fungible', '562'),
+               ('Almacén Papelería', '500'),
+               ('Biblioteca', '583'),
+               ('Cafetería IAA', '565'),
+               ('Cafetería UDIT', '571'),
+               ('Centralita', '500'),
+               ('Dirección', '535'),
+               ('Fax Administración', '545'),
+               ('Gerencia', '539'),
+               ('Laboratorio Electrónica P1', '582'),
+               ('Laboratorio Informática', '563'),
+               ('Laboratorio Óptica', '572'),
+               ('Laboratorio Revelado', '586'),
+               ('Laboratorio Scattering', '587'),
+               ('Polycom IMaX', '597'),
+               ('Recepción', '555'),
+               ('Sala Blanca Electrónica', '573'),
+               ('Sala Blanca Óptica', '572'),
+               ('Sala Juntas Edificio A', '554'),
+               ('Sala Juntas Edificio C', '625'),
+               ('Sala Reuniones Edificio B', '571'),
+               ('Sala Reuniones Edificio C', '636'),
+               ('Salón Actos', '559'),
+               ('Seguridad Edificio A', '500'),
+               ('Seguridad Edificio B', '501'),
+               ('Seguridad Edificio C', '502'),
+               ('Taller Mantenimiento', '558'),
+               ('Taller Mecánica', '570'),
+               ('Biblioteca OSN', '2003'),
+               ('Consola Telescopio 0.9m OSN', '2004'),
+               ('Consola Telescopio 1.5 m OSN', '2002'),
+               ('Consola Telescopio IR OSN', '2005'),
+               ('Laboratorio Electrónica OSN', '2001'),
+               ('Recepción OSN', '2000')]:
+                  add_place(name, phone)
+
           # Include in the search the restaurant at which, as part of a
           # time-honored and almost sacred tradition, we have lunch every
           # Friday: http://www.restauranteraices.es/
-          raices = Person("Restaurante Raíces", '', '', '958-120-103',
-                          'info@restauranteraices.es')
-          people.append(raices)
+          add_place("Restaurante Raíces", '958-120-103')
 
           if cache_path:  # cache (pickle) the list if a path was given
               pickle.dump(people, open(cache_path, 'wb'))

@@ -303,10 +303,10 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # Determine the max length of each column
-    name_column_length       = max([len(x.name) for x in matches])
-    department_column_length = max([len(x.department) for x in matches])
-    phone_column_length      = max([len(x.phone) for x in matches])
-    email_column_length      = max([len(x.email) for x in matches])
+    name_column_length       = max(len(x.name) for x in matches)
+    department_column_length = max(len(x.department) for x in matches)
+    phone_column_length      = max(len(x.phone) for x in matches)
+    email_column_length      = max(len(x.email) for x in matches)
 
     for person in matches:
         print person.name.ljust(name_column_length), '|', \

@@ -135,6 +135,17 @@ class Person(object):
     def name_wo_accents(self):
         return remove_accents(self.name)
 
+    def __hash__(self):
+        return hash((self.name, self.department, self.position,
+                     self.phone, self.email))
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __ne__(self, other):
+        return not self == other
+
+
 def query_website():
     url = "http://www.iaa.es/content/general-alphabetical-list.php"
     html = urllib.urlopen(url).read()
@@ -251,7 +262,7 @@ if __name__ == "__main__":
     "searches are case- and accent-insensitive."
 
     parser = optparse.OptionParser(description = description)
-    parser.usage = "%prog NAME | PHONE | EMAIL"
+    parser.usage = "%prog [NAME...] [PHONE] [EMAIL]"
 
     parser.add_option('-c', action = 'store_true', dest = 'clear',
                       help = "due to the slow speed of the IAA website; we "
@@ -262,7 +273,7 @@ if __name__ == "__main__":
                          "the website was recently updated!")
 
     (options, args) = parser.parse_args(args = sys.argv)
-    if len(args) != 2:
+    if len(args) < 2:
         parser.print_help()
         sys.exit(2)
 
@@ -276,7 +287,17 @@ if __name__ == "__main__":
         cache_max = 7 # days
 
     target = args[1]
-    matches = search(target, cache_path = cache_path, cache_max = cache_max)
+    kwargs = dict(cache_path = cache_path, cache_max = cache_max)
+    matches = set(search(target, **kwargs))
+
+    # If more than one search term is given, perform the search for all of them
+    # and compute the intersection of the results. For example: if "John" and
+    # "Doe" are the arguments passed to the script, we first search the records
+    # that contain "John", then those that contain "Doe" and finally return the
+    # intersection of both sets
+
+    for target in args[2:]:
+        matches &=  set(search(target, **kwargs))
 
     if not matches:
         sys.exit(0)

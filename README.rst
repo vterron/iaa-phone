@@ -6,3 +6,28 @@ This Python script, ``iaa-phone``, serves as the *white pages* of the `Institute
 The reverse telephone directory (*grey pages*) is also available, as searches may also be done by the phone number or e-mail address.
 
 All searches are case- and accent-insensitive.
+
+Examples
+--------
+
+.. code:: bash
+
+  $ phone ter
+  Cafetería IAA                    |      | 565 |
+  Terrón Salas, Víctor Francisco   | UDIT | 605 | vterron
+  Cafetería UDIT                   |      | 571 |
+  [...]
+
+Include multiple terms to restrict the search results:
+
+.. code:: bash
+
+  $ phone vic ter
+  Terrón Salas, Víctor Francisco | UDIT | 605 | vterron
+
+People can also be looked up by phone number:
+
+.. code:: bash
+
+  $ phone 605
+  Terrón Salas, Víctor Francisco | UDIT | 605 | vterron

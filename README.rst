@@ -31,3 +31,27 @@ People can also be looked up by phone number:
 
   $ phone 605
   Terrón Salas, Víctor Francisco | UDIT | 605 | vterron
+
+Installation
+------------
+
+Download the `tarball <https://github.com/vterron/iaa-phone/tarball/master>`_::
+
+    $ curl -OL https://github.com/vterron/iaa-phone/tarball/master
+
+Or, download the `zipball <https://github.com/vterron/iaa-phone/zipball/master>`_::
+
+    $ curl -OL https://github.com/vterron/iaa-phone/zipball/master
+
+
+Once you have a copy of the source, installing the script is a simple matter of
+running one command from a terminal::
+
+    $ python setup.py install
+
+If you do not have root permissions, include the ``--user`` option::
+
+    $ python setup.py install --user
+
+The Python docs have an entire section devoted to `Installing Python Modules
+<https://docs.python.org/2/install/>`_.

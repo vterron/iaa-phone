@@ -253,6 +253,14 @@ def search(target, encoding ='utf-8', cache_path = None, cache_max = 7):
 
     return sorted(matches, key = lambda x: x.name)
 
+def get_department(department, encoding ='utf-8', cache_path = None, cache_max = 7):
+    """ Return all the members of a given department. """
+
+    people = get_people(cache_path = cache_path, cache_max = cache_max)
+    department = department.lower()
+    matches = [person for person in people if department in person.department.lower()]
+    return sorted(matches, key = lambda x: x.name)
+
 if __name__ == "__main__":
 
     if sys.version_info < (2, 5):

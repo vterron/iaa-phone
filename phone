@@ -21,6 +21,7 @@
 
 import htmlentitydefs
 import HTMLParser
+import operator
 import optparse
 import os.path
 import pickle
@@ -247,19 +248,16 @@ def search(target, encoding ='utf-8', cache_path = None, cache_max = 7):
 
     people = get_people(cache_path = cache_path, cache_max = cache_max)
     target = remove_accents(target.decode(encoding)).lower()
-    matches = filter(lambda x: target in x.name_wo_accents.lower() or \
-                               target in str(x.phone) or \
-                               target in x.email, people)
-
-    return sorted(matches, key = lambda x: x.name)
+    return filter(lambda x: target in x.name_wo_accents.lower() or \
+                            target in str(x.phone) or \
+                            target in x.email, people)
 
 def get_department(department, encoding ='utf-8', cache_path = None, cache_max = 7):
     """ Return all the members of a given department. """
 
     people = get_people(cache_path = cache_path, cache_max = cache_max)
     department = department.lower()
-    matches = [person for person in people if department in person.department.lower()]
-    return sorted(matches, key = lambda x: x.name)
+    return [person for person in people if department in person.department.lower()]
 
 if __name__ == "__main__":
 
@@ -330,6 +328,9 @@ if __name__ == "__main__":
 
     if not matches:
         sys.exit(0)
+
+    # List all matches in lexicographical order
+    matches = sorted(matches, key = operator.attrgetter('name'))
 
     # Determine the max length of each column
     name_column_length       = max(len(x.name) for x in matches)

@@ -13,9 +13,9 @@ Examples
 .. code:: bash
 
   $ phone ter
-  Cafetería IAA                    |      | 565 |
-  Terrón Salas, Víctor Francisco   | UDIT | 605 | vterron
-  Cafetería UDIT                   |      | 571 |
+  Cafetería IAA                    | 565 |
+  Terrón Salas, Víctor Francisco   | 605 | vterron
+  Cafetería UDIT                   | 571 |
   [...]
 
 Include multiple terms to restrict the search results:
@@ -23,30 +23,14 @@ Include multiple terms to restrict the search results:
 .. code:: bash
 
   $ phone vic ter
-  Terrón Salas, Víctor Francisco | UDIT | 605 | vterron
+  Terrón Salas, Víctor Francisco | 605 | vterron
 
 People can also be looked up by phone number:
 
 .. code:: bash
 
   $ phone 605
-  Terrón Salas, Víctor Francisco | UDIT | 605 | vterron
-
-The `-d` (or `--department`) option restricts the search to the specified department:
-
-.. code:: bash
-
-  $ phone -d udit antonio
-  # Lists all the people named `antonio` at UDIT
-
-Without additional search criteria, `-d` lists all the members of the
-department. For example, to show all the people belonging to
-`DAE <http://www.iaa.es/es/content/DAE-personal.php>`_:
-
-.. code:: bash
-
-  $ phone -d dae
-  # Lists all the people that belong to DAE
+  Terrón Salas, Víctor Francisco | 605 | vterron
 
 Installation
 ------------
@@ -63,10 +47,12 @@ Or, download the `zipball <https://github.com/vterron/iaa-phone/zipball/master>`
 Once you have a copy of the source, installing the script is a simple matter of
 running one command from a terminal::
 
+    $ pip install beautifulsoup4
     $ python setup.py install
 
 If you do not have root permissions, include the ``--user`` option::
 
+    $ pip install --user beautifulsoup4
     $ python setup.py install --user
 
 The Python docs have an entire section devoted to `Installing Python Modules

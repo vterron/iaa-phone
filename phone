@@ -126,9 +126,8 @@ def unescape(s):
 
 
 class Person(object):
-    def __init__(self, name, department, position, phone, email, encoding = 'utf-8'):
+    def __init__(self, name, position, phone, email, encoding = 'utf-8'):
         self.name = unescape(name.decode(encoding))
-        self.department = unescape(department.decode(encoding))
         self.position = unescape(position.decode(encoding))
         self.phone = phone.decode(encoding)
         self.email = unescape(email.decode(encoding))
@@ -138,8 +137,7 @@ class Person(object):
         return remove_accents(self.name)
 
     def __hash__(self):
-        return hash((self.name, self.department, self.position,
-                     self.phone, self.email))
+        return hash((self.name, self.position, self.phone, self.email))
 
     def __eq__(self, other):
         return hash(self) == hash(other)
@@ -171,7 +169,7 @@ def parse_alphabetical_list(html):
         name = data.contents[0].text
         position = data.contents[3].split(")")[1].strip()
         email = data.contents[2].text.split()[0]
-        found_persons.append(Person(name, '', position, phone, email))
+        found_persons.append(Person(name, position, phone, email))
     return found_persons
 
 def get_people(cache_path = None, cache_max = 7):
@@ -190,7 +188,7 @@ def get_people(cache_path = None, cache_max = 7):
           def add_place(name, phone):
               """ Append a new Person object to 'people'. Except for the name
               and telephone number, all the fields are set to empty strings"""
-              people.append(Person(name, '', '', phone, ''))
+              people.append(Person(name, '', phone, ''))
 
           # The rooms and laboratories telephone numbers have to be hard-coded
           # as they are only available to employees through the IAA intranet.
@@ -253,12 +251,6 @@ def search(target, encoding ='utf-8', cache_path = None, cache_max = 7):
                             target in str(x.phone) or \
                             target in x.email, people)
 
-def get_department(department, encoding ='utf-8', cache_path = None, cache_max = 7):
-    """ Return all the members of a given department. """
-
-    people = get_people(cache_path = cache_path, cache_max = cache_max)
-    department = department.lower()
-    return [person for person in people if department in person.department.lower()]
 
 if __name__ == "__main__":
 
@@ -286,13 +278,8 @@ if __name__ == "__main__":
                          "connection to the IAA website -- useful in you know "
                          "the website was recently updated!")
 
-    parser.add_option('-d', '--department', action='store', dest = 'department',
-                      help = "restrict the search to the specified department. "
-                         "If no additional criteria are given, this option lists "
-                         "all the people that belong to this department")
-
     (options, args) = parser.parse_args(args = sys.argv)
-    if not options.department and len(args) < 2:
+    if len(args) < 2:
         parser.print_help()
         sys.exit(2)
 
@@ -306,17 +293,8 @@ if __name__ == "__main__":
         cache_max = 7 # days
 
     kwargs = dict(cache_path = cache_path, cache_max = cache_max)
-
-    # If we are searching by department, get first the list of all the people
-    # to belong to it, and (if needed) apply additional filters. Otherwise, if
-    # this is just a regular search, get all the people with a match with the
-    # first search term.
-
-    if options.department:
-        matches = set(get_department(options.department, **kwargs))
-    else:
-        target = args.pop(1) # args[0] is the script name
-        matches = set(search(target, **kwargs))
+    target = args.pop(1) # args[0] is the script name
+    matches = set(search(target, **kwargs))
 
     # If more than one search term is given, perform the search for all of
     # them and compute the intersection of the results. For example: if
@@ -335,13 +313,11 @@ if __name__ == "__main__":
 
     # Determine the max length of each column
     name_column_length       = max(len(x.name) for x in matches)
-    department_column_length = max(len(x.department) for x in matches)
     phone_column_length      = max(len(x.phone) for x in matches)
     email_column_length      = max(len(x.email) for x in matches)
 
     for person in matches:
         print person.name.ljust(name_column_length), '|', \
-              person.department.ljust(department_column_length), '|', \
               person.phone.ljust(phone_column_length), '|', \
               person.email.ljust(email_column_length)
 

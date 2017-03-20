@@ -26,6 +26,7 @@ import optparse
 import os.path
 import pickle
 import re
+from bs4 import BeautifulSoup
 
 # Set the default encoding to UTF-8. This solution is undoubtedly unclean, and
 # would potentially break in larger scripts, but good enough to make our simple
@@ -148,29 +149,29 @@ class Person(object):
 
 
 def query_website():
-    url = "http://www.iaa.es/content/general-alphabetical-list.php"
+    url = "http://www.iaa.es/miembros"
     html = urllib.urlopen(url).read()
     return html
 
 def parse_alphabetical_list(html):
 
     # A row in the table will look something like this:
-    # <tr><td>605</td><td><a href='http://www.python.org/~guido/'>Guido van Rossum</a></td>
-    #<td>Python Department</td><td>Benevolent Dictator for Life</td>
-    #<td>guido@python.org</td></tr>
-
-    regexp = re.compile("<tr><td>([0-9]*)</td><td>(<a .*?>)?(.*?)(</a>)?</td>"
-                        "<td>(.*?)</td><td>(.*?)</td><td>(.*?)</td></tr>",
-                        re.IGNORECASE)
+    # <li class="views-row views-row-15 views-row-odd">
+    # <div class="views-field views-field-nothing">
+    # <span class="field-content"><a href="http://www.python.org/~guido/"
+    # target="_blank"><b>Guido van Rossum</b></a> (<em>guido [at] python.org</em>;
+    # ext. 605) Benevolent Dictator for Life <b><em></em> </b></span>  </div></li>
 
     found_persons = []
-    for matched_line in regexp.findall(html):
-        phone = matched_line[0].strip()
-        name  = matched_line[2].strip()
-        department = matched_line[4].strip()
-        position = matched_line[5].strip()
-        email = matched_line[6].strip()
-        found_persons.append(Person(name, department, position, phone, email))
+    soup = BeautifulSoup(html)
+    for person in soup.find_all('div', class_="views-field views-field-nothing"):
+        data = person.contents[1]
+        # Extract phone from e.g. "; ext. 662) Técnico Superior ATP"
+        phone = data.contents[3].split()[2][:-1]
+        name = data.contents[0].text
+        position = data.contents[3].split(")")[1].strip()
+        email = data.contents[2].text.split()[0]
+        found_persons.append(Person(name, '', position, phone, email))
     return found_persons
 
 def get_people(cache_path = None, cache_max = 7):
